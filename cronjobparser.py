@@ -4,10 +4,32 @@ import codecs
 from pyparsing import White, Word, alphanums, CharsNotIn
 from pyparsing import Forward, Group, OneOrMore
 from pyparsing import pythonStyleComment
-from .freeradiusparser import BaseParser
 
 
-class CronJobParser(BaseParser):
+class CronJob(object):
+
+    def __init__(self, command, minute, user="root", hour="*", dom="*",
+                 month="*", dow="*"):
+        self.command = command
+        self.minute = minute
+        self.user = user
+        self.hour = hour
+        self.dom = dom
+        self.month = month
+        self.dow = dow
+
+    def __str__(self):
+        """
+        This simply returns the CronJob so that it can be added to the crontab
+        """
+        cronjob = "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (self.minute, self.hour,
+                                                  self.dom, self.month,
+                                                  self.dow, self.user,
+                                                  self.command)
+        return cronjob
+
+
+class CronJobParser(object):
     
     dtime = Word("0123456789-*")
     command = CharsNotIn("{}\n#,")
@@ -38,11 +60,9 @@ class CronJobParser(BaseParser):
                          )
     cron_file = OneOrMore(entry_block | assignment).ignore(pythonStyleComment)
     
-    file_header = """# File parsed and saved by privacyidea.\n\n"""
+    file_header = """# File parsed and saved by crontabparser.\n\n"""
     
-    def __init__(self,
-                 infile="/etc/crontab",
-                 content=None):
+    def __init__(self, infile="/etc/crontab", content=None):
         self.file = None
         if content:
             self.content = content
@@ -51,7 +71,7 @@ class CronJobParser(BaseParser):
             f = codecs.open(self.file, "r", "utf-8")
             self.content = f.read()
             f.close()
-            
+
     def get(self):
         """
         return the grouped config
@@ -66,9 +86,9 @@ class CronJobParser(BaseParser):
         return config
     
     def format(self, config):
-        '''
+        """
         :return: The formatted data as it would be written to a file
-        '''
+        """
         output = ""
         output += self.file_header
         # write the assignments
@@ -79,15 +99,8 @@ class CronJobParser(BaseParser):
         # write the cronjobs
         output += "\n#m\th\tdom\tmon\tdow\tuser\tcommand\n"
         cronjobs = config.get("cronjobs")
-        for entry in cronjobs:
-            output += "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (entry.get("minute", "*"),
-                                                      entry.get("hour", "*"),
-                                                      entry.get("dom", "*"),
-                                                      entry.get("month", "*"),
-                                                      entry.get("dow", "*"),
-                                                      entry.get("user"),
-                                                      entry.get("command"))
-            output += "\n"
+        for cronjob in cronjobs:
+            output += "%s\n" % cronjob
         return output
     
     def get_dict(self):
@@ -98,24 +111,17 @@ class CronJobParser(BaseParser):
             if len(entry) == 2:
                 assignments[entry[0]] = entry[1]
             elif len(entry) == 7:
-                cronjobs.append({"minute": entry[0],
-                                 "hour": entry[1],
-                                 "dom": entry[2],
-                                 "month": entry[3],
-                                 "dow": entry[4],
-                                 "user": entry[5],
-                                 "command": entry[6]
-                                 })
+                cronjobs.append(CronJob(entry[6], entry[0],
+                                        user=entry[5], hour=entry[1],
+                                        dom=entry[2], month=entry[3],
+                                        dow=entry[4]))
         
         return {"assignments": assignments,
                 "cronjobs": cronjobs}
 
-
-def main():  # pragma: no cover
-    CP = CronJobParser()
-    config = CP.get_dict()
-    print CP.format(config)
-        
-
-if __name__ == '__main__':
-    main()
+    def save(self, outfile):
+        output = self.format(self.get_dict())
+        f = codecs.open(outfile, 'w', 'utf-8')
+        for line in output.splitlines():
+            f.write(line + "\n")
+        f.close()
