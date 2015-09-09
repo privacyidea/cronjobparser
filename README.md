@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/privacyidea/freeradiusparser.svg?branch=master)](https://travis-ci.org/privacyidea/freeradiusparser)
-[![Coverage Status](https://coveralls.io/repos/privacyidea/freeradiusparser/badge.svg?branch=master)](https://coveralls.io/github/privacyidea/freeradiusparser?branch=master)
+[![Build Status](https://travis-ci.org/privacyidea/crontabparser.svg?branch=master)](https://travis-ci.org/privacyidea/crontabparser)
+[![Coverage Status](https://coveralls.io/repos/privacyidea/crontabparser/badge.svg?branch=master)](https://coveralls.io/github/privacyidea/crontabparser?branch=master)
 
 
 # A parser for /etc/crontab
