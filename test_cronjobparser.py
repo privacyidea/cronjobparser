@@ -31,7 +31,7 @@ class TestCrontabParser(unittest.TestCase):
         config_raw = CP.get()
         self.assertEqual(len(config_raw), 8)
 
-        config = CP.get_dict()
+        config = CP.config
         self.assertEqual(len(config), 2)
         self.assertTrue("assignments" in config)
         self.assertTrue("cronjobs" in config)
@@ -43,14 +43,14 @@ class TestCrontabParser(unittest.TestCase):
 
     def test_from_config(self):
         CP = CronJobParser(content=CRONTAB)
-        config = CP.get_dict()
+        config = CP.config
         self.assertEqual(len(config), 2)
         self.assertTrue("assignments" in config)
         self.assertTrue("cronjobs" in config)
 
     def test_save(self):
         CP = CronJobParser(content=CRONTAB)
-        config = CP.get_dict()
+        config = CP.config
         self.assertEqual(len(config.get("cronjobs")), 6)
         cronj = config.get("cronjobs")[0]
         self.assertEqual(cronj.minute, "17")
@@ -61,7 +61,7 @@ class TestCrontabParser(unittest.TestCase):
         CP.save(outfile="./testdata/tmpfile")
         # Read the file again!
         CP2 = CronJobParser("./testdata/tmpfile")
-        config = CP2.get_dict()
+        config = CP2.config
         self.assertEqual(len(config.get("cronjobs")), 6)
         cronj = config.get("cronjobs")[0]
         self.assertEqual(cronj.minute, "17")

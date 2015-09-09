@@ -84,6 +84,11 @@ class CronJobParser(object):
                                         dom=entry[2], month=entry[3],
                                         dow=entry[4]))
 
+    @property
+    def config(self):
+        return {"assignments": self.assignments,
+                "cronjobs": self.cronjobs}
+
     def get(self):
         """
         return the grouped config
