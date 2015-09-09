@@ -72,6 +72,18 @@ class CronJobParser(object):
             self.content = f.read()
             f.close()
 
+        data = self.get()
+        self.assignments = {}
+        self.cronjobs = []
+        for entry in data:
+            if len(entry) == 2:
+                self.assignments[entry[0]] = entry[1]
+            elif len(entry) == 7:
+                self.cronjobs.append(CronJob(entry[6], entry[0],
+                                        user=entry[5], hour=entry[1],
+                                        dom=entry[2], month=entry[3],
+                                        dow=entry[4]))
+
     def get(self):
         """
         return the grouped config
@@ -85,42 +97,25 @@ class CronJobParser(object):
         config = self.cron_file.parseString(self.content)
         return config
     
-    def format(self, config):
+    def format(self):
         """
         :return: The formatted data as it would be written to a file
         """
         output = ""
         output += self.file_header
         # write the assignments
-        assignments = config.get("assignments")
+        assignments = self.assignments
         for assignment in assignments:
             output += "%s=%s\n" % (assignment,
                                    assignments.get(assignment))
         # write the cronjobs
         output += "\n#m\th\tdom\tmon\tdow\tuser\tcommand\n"
-        cronjobs = config.get("cronjobs")
-        for cronjob in cronjobs:
+        for cronjob in self.cronjobs:
             output += "%s\n" % cronjob
         return output
-    
-    def get_dict(self):
-        data = self.get()
-        assignments = {}
-        cronjobs = []
-        for entry in data:
-            if len(entry) == 2:
-                assignments[entry[0]] = entry[1]
-            elif len(entry) == 7:
-                cronjobs.append(CronJob(entry[6], entry[0],
-                                        user=entry[5], hour=entry[1],
-                                        dom=entry[2], month=entry[3],
-                                        dow=entry[4]))
-        
-        return {"assignments": assignments,
-                "cronjobs": cronjobs}
 
     def save(self, outfile):
-        output = self.format(self.get_dict())
+        output = self.format()
         f = codecs.open(outfile, 'w', 'utf-8')
         for line in output.splitlines():
             f.write(line + "\n")
