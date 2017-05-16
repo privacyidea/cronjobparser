@@ -62,16 +62,14 @@ class CronJobParser(object):
     
     file_header = """# File parsed and saved by crontabparser.\n\n"""
     
-    def __init__(self, infile="/etc/crontab", content=None):
-        self.file = None
-        if content:
-            self.content = content
-        else:
-            self.file = infile
-            f = codecs.open(self.file, "r", "utf-8")
-            self.content = f.read()
-            f.close()
+    def __init__(self, infile="/etc/crontab"):
+        self.file = infile
+        self.read()
 
+    def read(self):
+        f = codecs.open(self.file, "r", "utf-8")
+        self.content = f.read()
+        f.close()
         data = self.get()
         self.assignments = {}
         self.cronjobs = []
