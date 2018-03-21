@@ -30,7 +30,7 @@ class CronJob(object):
         if len(time) > 5:
             raise RuntimeError("Malformed cronjob time: {!r}".format(time))
         padded_time = tuple(time) + ('*',) * (5 - len(time))
-        if len(padded_time) > 5:
+        if len(padded_time) != 5:
             raise RuntimeError("Malformed cronjob time: {!r}".format(padded_time))
         return cls(command, padded_time[0], user, padded_time[1], padded_time[2], padded_time[3], padded_time[4])
 
