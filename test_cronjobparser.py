@@ -52,4 +52,19 @@ class TestCrontabParser(unittest.TestCase):
         self.assertEqual(cronj.dow, "*")
         os.unlink("./testdata/tmpfile")
 
+    def test_cronjob_api(self):
+        CP = CronJobParser("./testdata/crontab")
+        config = CP.config
+        self.assertEqual(len(config.get("cronjobs")), 6)
+
+        backup_job2 = config['cronjobs'][-1]
+        self.assertEqual(backup_job2.command, "/usr/bin/privacyidea-backup")
+        self.assertEqual(backup_job2.time, ("1", "10", "1", "*", "*"))
+        self.assertEqual(backup_job2.get_time_comment(), "monthly")
+        self.assertEqual(backup_job2.get_time_summary(),
+                         "monthly at time 10:01, day of month: 1, month: *, day of week: *")
+
+        backup_copy = CronJob.from_time("/usr/bin/privacyidea-backup", "privacyidea", ("1", "10", "1"))
+        self.assertEqual(str(backup_job2), str(backup_copy))
+
 
