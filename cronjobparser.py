@@ -30,7 +30,7 @@ class CronJob(object):
         assert len(time) <= 5
         padded_time = tuple(time) + ('*',) * (5 - len(time))
         assert len(padded_time) == 5
-        return CronJob(command, time[0], user, padded_time[1], padded_time[2], padded_time[3], padded_time[4])
+        return cls(command, time[0], user, padded_time[1], padded_time[2], padded_time[3], padded_time[4])
 
     @property
     def time(self):
