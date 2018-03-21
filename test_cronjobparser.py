@@ -67,4 +67,7 @@ class TestCrontabParser(unittest.TestCase):
         backup_copy = CronJob.from_time("/usr/bin/privacyidea-backup", "privacyidea", ("1", "10", "1"))
         self.assertEqual(str(backup_job2), str(backup_copy))
 
+        cronjob = CronJob.from_time("foo", "user", ())
+        assert cronjob.time == ("*",) * 5
+
 
