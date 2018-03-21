@@ -70,4 +70,6 @@ class TestCrontabParser(unittest.TestCase):
         cronjob = CronJob.from_time("foo", "user", ())
         assert cronjob.time == ("*",) * 5
 
+        self.assertRaises(RuntimeError, CronJob.from_time, "foo", "user", ("1", "2", "3", "4", "5", "6"))
+
 
