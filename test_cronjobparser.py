@@ -5,7 +5,7 @@ import logging
 log = logging.getLogger(__name__)
 import unittest
 import os
-from cronjobparser import CronJobParser, CronJob
+from .cronjobparser import CronJobParser, CronJob
 
 
 class TestCrontabParser(unittest.TestCase):
