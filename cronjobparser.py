@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-import codecs
 
+from six import python_2_unicode_compatible
+import codecs
 from pyparsing import White, Word, alphanums, CharsNotIn
 from pyparsing import Forward, Group, OneOrMore
 from pyparsing import pythonStyleComment
 
 
+@python_2_unicode_compatible
 class CronJob(object):
 
     def __init__(self, command, minute, user="root", hour="*", dom="*",
@@ -24,15 +26,17 @@ class CronJob(object):
         Alternative method to instantiate CronJob.
         :param command: like in ``CronJob.__init__``
         :param user: like in ``CronJob.__init__``
-        :param time: a list or tuple of at most five strings. Missing elements are set to "*".
+        :param time: a list or tuple of at most five strings.
+                     Missing elements are set to "*".
         :return: a ``CronJob`` object
         """
         if len(time) > 5:
             raise RuntimeError("Malformed cronjob time: {!r}".format(time))
         padded_time = tuple(time) + ('*',) * (5 - len(time))
-        if len(padded_time) != 5:
+        if len(padded_time) != 5:  # pragma: no cover
             raise RuntimeError("Malformed cronjob time: {!r}".format(padded_time))
-        return cls(command, padded_time[0], user, padded_time[1], padded_time[2], padded_time[3], padded_time[4])
+        return cls(command, padded_time[0], user, padded_time[1], padded_time[2],
+                   padded_time[3], padded_time[4])
 
     @property
     def time(self):
@@ -47,16 +51,15 @@ class CronJob(object):
         """
         This simply returns the CronJob so that it can be added to the crontab
         """
-        cronjob = "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (self.minute, self.hour,
-                                                  self.dom, self.month,
-                                                  self.dow, self.user,
-                                                  self.command)
+        cronjob = u"{minute!s}\t{hour!s}\t{dom!s}\t{month!s}\t{dow!s}" \
+                  u"\t{user!s}\t{command!s}".format(**self.__dict__)
         return cronjob
 
     def get_time_comment(self):
         """
         Return a human-readable comment describing the cronjob time, if possible.
-        :return: a string, e.g. "hourly", "monthly", which may be empty if no description can be inferred.
+        :return: a string, e.g. "hourly", "monthly", which may be empty
+                 if no description can be inferred.
         """
         comment = ""
         if self.minute != "*":
@@ -74,9 +77,10 @@ class CronJob(object):
     def get_time_summary(self):
         """
         Get a human-readable summary of the cronjob time.
-        :return: a string of the form "Y at time hh:mm, day of month:x, month:x, day of week:x",
-        where as Y is the comment returned by ``get_time_comment``. If no comment can be found,
-        the "Y at" is omitted.
+        :return: a string of the form
+                 "Y at time hh:mm, day of month:x, month:x, day of week:x",
+                 where as Y is the comment returned by ``get_time_comment``.
+                 If no comment can be found, the "Y at" is omitted.
         """
         comment = self.get_time_comment()
         if comment:
@@ -89,20 +93,15 @@ class CronJob(object):
         minute = self.minute
         if minute != "*":
             minute = minute.zfill(2)
-        return "{}time {}:{}, day of month: {}, month: {}, day of week: {}".format(
-            full_comment,
-            hour,
-            minute,
-            self.dom,
-            self.month,
-            self.dow
-        )
+        return "{}time {}:{}, day of month: {}, month: {}, " \
+               "day of week: {}".format(full_comment, hour, minute, self.dom,
+                                        self.month, self.dow)
 
 
 class CronJobParser(object):
     
     dtime = Word("0123456789-*")
-    command = CharsNotIn("{}\n#,")
+    command = CharsNotIn("\n#,")
     username = Word(alphanums)
     key = Word(alphanums)
     value = command
@@ -134,6 +133,9 @@ class CronJobParser(object):
     
     def __init__(self, infile="/etc/crontab"):
         self.file = infile
+        self.content = ""
+        self.assignments = {}
+        self.cronjobs = []
         self.read()
 
     def read(self):
@@ -141,16 +143,14 @@ class CronJobParser(object):
         self.content = f.read()
         f.close()
         data = self.get()
-        self.assignments = {}
-        self.cronjobs = []
         for entry in data:
             if len(entry) == 2:
                 self.assignments[entry[0]] = entry[1]
             elif len(entry) == 7:
                 self.cronjobs.append(CronJob(entry[6], entry[0],
-                                        user=entry[5], hour=entry[1],
-                                        dom=entry[2], month=entry[3],
-                                        dow=entry[4]))
+                                             user=entry[5], hour=entry[1],
+                                             dom=entry[2], month=entry[3],
+                                             dow=entry[4]))
 
     @property
     def config(self):

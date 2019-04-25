@@ -8,7 +8,8 @@ setup(name='crontabparser',
       author_email='cornelius.koelbel@netknights.it',
       url='https://github.com/privacyidea/crontabparser',
       py_modules=['crontabparser'],
-      install_requires = [
-          'pyparsing>=2.0'
+      install_requires=[
+            'pyparsing>=2.0',
+            'six'
       ]
-)
+      )

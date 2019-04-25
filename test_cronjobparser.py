@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-
 import logging
-log = logging.getLogger(__name__)
 import unittest
 import os
 from .cronjobparser import CronJobParser, CronJob
+log = logging.getLogger(__name__)
 
 
 class TestCrontabParser(unittest.TestCase):
@@ -61,15 +60,24 @@ class TestCrontabParser(unittest.TestCase):
         self.assertEqual(backup_job2.command, "/usr/bin/privacyidea-backup")
         self.assertEqual(backup_job2.time, ("1", "10", "1", "*", "*"))
         self.assertEqual(backup_job2.get_time_comment(), "monthly")
-        self.assertEqual(backup_job2.get_time_summary(),
-                         "monthly at time 10:01, day of month: 1, month: *, day of week: *")
+        self.assertEqual(backup_job2.get_time_summary(), "monthly at time 10:01, "
+                                                         "day of month: 1, month: "
+                                                         "*, day of week: *")
 
-        backup_copy = CronJob.from_time("/usr/bin/privacyidea-backup", "privacyidea", ("1", "10", "1"))
+        backup_copy = CronJob.from_time("/usr/bin/privacyidea-backup",
+                                        "privacyidea", ("1", "10", "1"))
         self.assertEqual(str(backup_job2), str(backup_copy))
 
         cronjob = CronJob.from_time("foo", "user", ())
         assert cronjob.time == ("*",) * 5
+        self.assertEqual(cronjob.get_time_summary(),
+                         "time *:*, day of month: *, month: *, day of week: *")
 
-        self.assertRaises(RuntimeError, CronJob.from_time, "foo", "user", ("1", "2", "3", "4", "5", "6"))
+        self.assertRaises(RuntimeError, CronJob.from_time, "foo", "user",
+                          ("1", "2", "3", "4", "5", "6"))
 
-
+        rm_cmd = "find /var/log/privacyidea -name privacyidea.log.* " \
+                 "--exec 'rm' '-f' '{}' ';'"
+        rm_job = CronJob.from_time(rm_cmd, "root", ('1', '2', '3', '4', '5'))
+        self.assertEqual(rm_job.command, rm_cmd)
+        self.assertEqual(rm_job.get_time_comment(), "yearly")
