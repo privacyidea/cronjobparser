@@ -139,9 +139,8 @@ class CronJobParser(object):
         self.read()
 
     def read(self):
-        f = codecs.open(self.file, "r", "utf-8")
-        self.content = f.read()
-        f.close()
+        self.assignments = {}
+        self.cronjobs = []
         data = self.get()
         for entry in data:
             if len(entry) == 2:
@@ -164,9 +163,8 @@ class CronJobParser(object):
         """
         # reread the file from dist
         if self.file:
-            f = codecs.open(self.file, "r", "utf-8")
-            self.content = f.read()
-            f.close()
+            with codecs.open(self.file, "r", "utf-8") as f:
+                self.content = f.read()
         config = self.cron_file.parseString(self.content)
         return config
     
@@ -189,7 +187,6 @@ class CronJobParser(object):
 
     def save(self, outfile):
         output = self.format()
-        f = codecs.open(outfile, 'w', 'utf-8')
-        for line in output.splitlines():
-            f.write(line + "\n")
-        f.close()
+        with codecs.open(outfile, 'w', 'utf-8') as f:
+            for line in output.splitlines():
+                f.write(line + "\n")
