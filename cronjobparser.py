@@ -100,7 +100,7 @@ class CronJob(object):
 
 class CronJobParser(object):
     
-    dtime = Word("0123456789-*")
+    dtime = Word("0123456789-*/")
     command = CharsNotIn("\n#,")
     username = Word(alphanums)
     key = Word(alphanums)
@@ -161,11 +161,12 @@ class CronJobParser(object):
         return the grouped config
         
         """
+        config = []
         # reread the file from dist
         if self.file:
             with codecs.open(self.file, "r", "utf-8") as f:
                 self.content = f.read()
-        config = self.cron_file.parseString(self.content)
+            config = self.cron_file.parseString(self.content)
         return config
     
     def format(self):
