@@ -11,6 +11,14 @@ CRONTAB_TMP = "./testdata/tmpfile"
 
 
 class TestCrontabParser(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        try:
+            os.unlink(CRONTAB_TMP)
+        except (IOError, OSError):
+            pass
 
     def test_import_from_file(self):
         CP = CronJobParser(CRONTAB_TEST)
@@ -60,8 +68,22 @@ class TestCrontabParser(unittest.TestCase):
         self.assertEqual(len(CP2.config.get("cronjobs")), 7)
         self.assertEqual(CP2.config.get("cronjobs")[6].command, u'bär')
 
-        # remove temporary file
-        os.unlink(CRONTAB_TMP)
+    def test_forward_slash(self):
+        CP = CronJobParser(infile=None)
+        CP.cronjobs.append(CronJob.from_time('cmd', 'user', ['*/5', '*', '*', '*', '*']))
+        config = CP.config
+        self.assertEqual(len(config.get('cronjobs')), 1)
+        self.assertEqual(config.get('cronjobs')[0].minute, '*/5', config.get('cronjobs')[0])
+        CP.save(CRONTAB_TMP)
+        self.assertTrue(os.path.exists(CRONTAB_TMP))
+        # check that we have correctly written the crontab
+        with open(CRONTAB_TMP, 'r') as f:
+            tmp_data = f.read().splitlines()
+            self.assertEqual(tmp_data[-1], str(config.get('cronjobs')[0]), tmp_data)
+        # now re-read the written crontab
+        CP2 = CronJobParser(infile=CRONTAB_TMP)
+        config = CP2.config
+        self.assertEqual(config.get('cronjobs')[0].minute, '*/5', config.get('cronjobs')[0])
 
     def test_cronjob_api(self):
         CP = CronJobParser(CRONTAB_TEST)
